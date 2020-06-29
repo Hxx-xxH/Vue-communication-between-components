@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+		<title>Document</title>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	</head>
+	<body>
+		<div id="app">
+				<com-article :articles="articleList" @onemitarg="emitReceive"></com-article>
+				<span>传递的值为:{{itemIndex}}</span>
+				<com-a ref="coma"></com-a>
+				<button @click="changeMsg">更改子组件msg</button>
+				<com-b></com-b>
+				<p v-if="msgFromRefComa">来自com-a的msg:{{msgFromRefComa}}</p>
+		</div>
+		
+		<script>
+			let vm = new Vue({
+				el: "#app",
+				data() {
+					return {
+						itemIndex:null,
+						articleList:['红楼梦', '西游记','三国演义'],
+						msgForA:"this is from parent",
+						msgForBC:"this is msg from root com for B and C",
+						msgFromRefComa:null
+					}
+				},
+				provide(){
+					return {
+						msgForBC:this.msgForBC
+					}
+				},
+				methods:{
+					emitReceive(arg){
+						this.itemIndex = arg;
+					},
+					changeMsg(){
+						// console.log(this.$children);
+						this.$children[1].parentMsg = "this is changed for child";
+					}
+				},
+				components:{
+					ComArticle:{
+						template:`<div><span v-for="(item,index) of articles" :key="index" v-text="item" @click="emitArg(index)"></span></div>`,
+						props:{
+							articles:Array
+						},
+						methods:{
+							emitArg(arg){
+								this.$emit("onemitarg",arg);
+							}
+						}
+					},
+					ComA:{
+						template:"<div><span>组件A:{{parentMsg}}</span></div>",
+						data(){
+							return {
+								parentMsg:this.$parent.msgForA,
+								msg:"this is from <com-a>"
+							}
+						}
+					},
+					ComB:{
+						template:`<div><div>组件B:{{msgForBC}}</div><com-c></com-c></div>`,
+						inject:["msgForBC"],
+						components:{
+							ComC:{
+								template:`<div><div>组件C:{{msg}}</div></div>`,
+								inject:["msgForBC"],
+								data(){
+									return {
+										msg:this.msgForBC
+									}
+								}
+							}
+						}
+					}
+				},
+				mounted(){
+					this.msgFromRefComa = this.$refs.coma.msg;
+				}
+			})
+		</script>
+	</body>
+</html>

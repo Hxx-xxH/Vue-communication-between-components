@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<script src="./event_bus.js" type="text/javascript" charset="utf-8"></script>
+</head>
+
+<body>
+	<div id="app">
+		<template>
+			<show-num-com></show-num-com>
+			<add-num-com></add-num-com>
+		</template>
+	</div>
+
+	<script>
+		Vue.prototype.eventBus = eventBus; //Vue的原型对象中创建eventBus等于event_bus.js中创建的eventBus实例,这样任何Vue实例都能调用eventBus实例中的方法
+		let vm = new Vue({
+			el: "#app",
+			components: {
+				showNumCom: {
+					name: "show",
+					template: `<div><ul><li v-for="(item,i) of numArray" :key="i" v-text="item"></li></ul></div>`,
+					data() {
+						return {
+							numArray: [2, 4, 5]
+						}
+					},
+					methods: {
+						add(num) {
+							this.numArray.push(num);
+						}
+					},
+					mounted() {
+						this.eventBus.$on("addItem", this.add.bind(this)); //给eventBus添加事件addItem
+					}
+				},
+				addNumCom: {
+					name: "add",
+					template: `<div><input type="text"placeholder="请输入你要添加的数字" v-model="num"><button @click="add">添加数字</button></div>`,
+					data() {
+						return {
+							num: null
+						}
+					},
+					methods: {
+						add() {
+							this.eventBus.$emit("addItem", this.num); //触发eventBus实例里的事件addItem并给绑定的函数传参
+							this.num = null;
+						}
+					}
+				}
+			}
+		})
+	</script>
+</body>
+
+</html>
