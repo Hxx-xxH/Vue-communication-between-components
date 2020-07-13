@@ -408,7 +408,11 @@ Vuex 是一个专为 Vue.js 应用程序开发的**状态管理模式**。它采
 
 如果您的应用够简单，您最好不要使用 Vuex。一个简单的 [store 模式](https://cn.vuejs.org/v2/guide/state-management.html#简单状态管理起步使用)就足够您所需了。但是，如果您需要构建一个中大型单页应用，您很可能会考虑如何更好地在组件外部管理状态，Vuex 将会成为自然而然的选择。
 
+Vuex详见[官方文档](https://vuex.vuejs.org/zh/)和[Vuex.md](https://github.com/Hxx-xxH/Vuex)
 
+
+
+------
 
 [^1]:Vue官方文档 [https://cn.vuejs.org/v2/guide/components-edge-cases.html#%E8%AE%BF%E9%97%AE%E7%88%B6%E7%BA%A7%E7%BB%84%E4%BB%B6%E5%AE%9E%E4%BE%8B](https://cn.vuejs.org/v2/guide/components-edge-cases.html#访问父级组件实例)
 [^2]:Vue官方文档 [https://cn.vuejs.org/v2/guide/components-edge-cases.html#%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5](https://cn.vuejs.org/v2/guide/components-edge-cases.html#依赖注入)

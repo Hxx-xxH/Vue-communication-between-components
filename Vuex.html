@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="keywords" content="">
+    <meta name="author" content="Hxx">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/vuex@3.4.0/dist/vuex.js"></script>
+    <!--CDN引入 -->
+    <style>
+        div {
+            background-color: wheat;
+            background: #2968cf;
+            padding: 11px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">Code Runner
+        <button @click="increment">{{count}}</button>
+        <com-a></com-a>
+        <!-- <p>count2:{{count2}}</p>
+        <p>和:{{countPlusLocalState}}</p> -->
+        <p>doneTodos:{{doneTodos}}</p>
+        <p>todos:{{todos}}</p>
+    </div>
+
+    <script>
+        let { mapActions, mapGetters, mapMutations, mapState } = Vuex;
+        const increment = "increment";
+        const moduleA = {
+            namespaced: true,//默认情况下，模块内部的 action、mutation 和 getter 是注册在全局命名空间的——这样使得多个模块能够对同一 mutation 或 action 作出响应,添加该属性使得该模块成为带命名空间的模块。当模块被注册后，它的所有 getter、action 及 mutation 都会自动根据模块注册的路径调整命名。
+            state() {
+                return { count: 100 };
+            },
+            getters: {
+                addCountA(state, getters, rootState, rootGetters) {
+                    console.log(`state.count的值为${state.count}`);
+                    console.log(`rootState.count的值为${rootState.count}`);
+                    console.log(`rootGetters.addCountB的值为${rootGetters.addCountB}`);
+                    return state.count + rootState.count;
+                }//在moduleA添加`namespaced: true`的情况下,用store.getters["moduleA/addCountA"]来调用;
+            },
+            mutations: {
+                incrementN(state, n) {
+                    console.log(`n的值为:${n}`);
+                    n += state.count;
+                    console.log(`n的值为:${n}`);
+                    console.log(`state.count+n的值:${n}`);
+                },
+                [`${increment}PL`](state, payLoad) {
+                    console.log(`state.count的值为:${state.count}`);
+                    console.log(`payLoad.n的值A为:${payLoad.n}`);
+                    return console.log(`moduleA中的incrementPL输出state.count+payLoad.n为:${state.count + payLoad.n}`);
+                },//在默认情况下,module中的mutations的属性名可以与store中的重名,重名函数会以数组形式出现在store._mutations中,且共用一个payload,即module中的函数调用时即使传入payLoad也是无效的,当添加`namespaced: true`后,用store.commit("moduleA/incrementPL",{n:10})来调用.
+                [`${increment}ModuleA`](state, payLoad) {
+                    return console.log(state.count + payLoad.n);
+                }
+            },
+            actions: {
+                [`${increment}PL`]({ commit, rootState, rootGetters }, payLoad) {
+                    // console.log(arguments);
+                    console.log(`rootstate.count:${rootState.count}`);
+                    console.log(`rootGetters.addCountB:${rootGetters.addCountB}`);
+                    commit(`${increment}PL`, payLoad);
+                },//默认情况下,module中的actions的属性名可以与store中的重名,重名函数会以数组形式出现在store._actions中,且共用一个payload,即module中的函数调用时即使传入payLoad也是无效的
+                [`${increment}OnRoot`]({ commit, dispatch }, payLoad) {
+                    commit("incrementForModules", payLoad, { root: true });
+                    dispatch("incrementForModules", payLoad, { root: true });
+                },
+                [`${increment}ForModules`]: {
+                    root: true,//在带命名空间的模块注册全局 action
+                    handler(context, payLoad) {
+                        console.log(1);
+                    }
+                }
+            },
+            modules: {
+                moduleAA: {
+                    namespaced: true,
+                    state() {
+                        return { count: 1000 };
+                    },
+                    getters: {
+                        addCountA(state, getters, rootState) {
+                            console.log(`state.count的值为${state.count}`);
+                            console.log(`rootState.count的值为${rootState.count}`);
+                            return state.count + rootState.count;
+                        }//,用store.getters["moduleA/moduleAA/addCount"]来调用;
+                    },
+                }
+            }
+        }
+        const moduleB = {
+            state: () => ({ count: 200 }),
+            getters: {
+                addCountB(state, getters, rootState) {
+                    return state.count + rootState.count;
+                }
+            },//默认情况下,各个module的getters属性不能重名
+            mutations: {
+                [`${increment}ModuleA`](state, payLoad) {
+                    return console.log(state.count + payLoad.n);
+                },
+                [`${increment}PL`](state, payLoad) {
+                    console.log(`state.count的值为:${state.count}`);
+                    console.log(`payLoad.n的值A为:${payLoad.n}`);
+                    return console.log(`moduleA中的incrementPL输出state.count+payLoad.n为:${state.count + payLoad.n}`);
+                },//默认情况下,各个module的mutations的属性可以重名,重名函数会以数组形式出现在store._mutations中
+            }
+        }
+        const store = new Vuex.Store({
+            modules: {
+                moduleA,
+                moduleB,
+            },
+            state: {
+                count: 0,
+                todos: [
+                    { id: 1, text: '...', done: true },
+                    { id: 2, text: '...', done: false }
+                ],
+            },
+            mutations: {
+                increment(state) {
+                    state.count++;
+                    console.log(`state.count的值:${state.count}`);
+                },
+                incrementN(state, n) {
+                    console.log(`n的值为:${n}`);
+                    n += state.count;
+                    console.log(`n的值为:${n}`);
+                    console.log(`state.count+n的值:${n}`);
+                },
+                incrementPL(state, payLoad) {
+                    console.log(`state.count的值为:${state.count}`);
+                    console.log(`payLoad.n的值为:${payLoad.n}`);
+                    payLoad.n += state.count;
+                    console.log(`payLoad.n的值:${payLoad.n}`);
+                },
+                [increment + "Dynamic"](state) {
+                    console.log("动态计算属性名");
+                },
+                [`${increment}ForModules`](state, payLoad) {
+                    console.log(payLoad);
+                    console.log("this is global mutation for modules");
+                }
+            },
+            getters: {
+                doneTodos: state => {
+                    return state.todos.filter(todo => todo.done)
+                },
+                doneTodosCount: (state, getters) => {
+                    return getters.doneTodos.length
+                },
+                // getTodoById: (state) => (id) => {                 // 等价于getTodoById(state){return function(id){return state.todos.find(todo => todo.id === id)}}
+                //     return state.todos.find(todo => todo.id === id)
+                // },
+                getTodoById(state) {
+                  return function (id) {
+                    return state.todos.find(todo => todo.id === id)
+                }
+              },
+            },
+            actions: {
+                [`${increment}A`](context) {
+                    console.log(context);
+                    context.commit("increment");
+                },
+                [`${increment}B`]({ state, commit, dispatch, getters }) {
+                    console.log(`incrementB输出state.count:${state.count}`);
+                    commit("increment");
+                    dispatch("incrementA");
+                    console.log(`incrementB输出getters.doneTodosCount:${getters.doneTodosCount}`);
+                },
+                [`${increment}PL`]({ commit }, payLoad) {
+                    // console.log(arguments);
+                    commit(`${increment}PL`, payLoad);
+                },
+                [`${increment}ForModules`]({ commit, dispatch }, payLoad) {
+                    console.log(payLoad);
+                    console.log("this is global action for modules");
+                }
+            }
+        });
+        // store.dispatch("incrementA");
+        // store.dispatch("incrementB");
+        store.commit('increment');
+        // store.commit("incrementN", 5);
+        store.commit("incrementPL", { n: 10 });
+        // store.dispatch("incrementPL",{n:11});
+        // store.commit({ type: "incrementPL", n: 20 });
+        // store.dispatch({ type: "incrementPL", n: 21 });
+        // store.commit('incrementDynamic');
+        // store.commit({ type: increment + "Dynamic" });
+        // store.dispatch("incrementA");
+        let vm = new Vue({
+            el: "#app",
+            store,
+            data() {
+                return {
+                    localCount: 4
+                }
+            },
+            methods: {
+                increment() {
+                    this.$store.commit("increment");
+                    console.log(this.$store.state.count);
+                },
+                ...mapMutations(["incrementN"]),
+                ...mapMutations({ payLoad: "incrementPL", dynamic: increment + "Dynamic" }),
+                ...mapActions([`${increment}A`, `${increment}B`]),
+                ...mapActions({ [`payLoad2`]: `${increment}PL` }),
+                ...mapMutations([`moduleA/${increment}ModuleA`]),
+                ...mapMutations({ [`${increment}ModuleA`]: `moduleA/${increment}ModuleA` }),
+                ...mapActions(`moduleA`, [`${increment}OnRoot`]),
+            },
+            // computed: {
+            //     count(){
+            //         return this.$store.state.count;
+            //     }
+            // },
+            // computed: mapState({
+            //     // 箭头函数可使代码更简练
+            //     count: state => state.count,
+            //     // 传字符串参数 'count' 等同于 `state => state.count` countAlias = count
+            //     countAlias: 'count',
+            //     count2: 'count',
+            //     // 为了能够使用 `this` 获取局部状态，必须使用常规函数
+            //     countPlusLocalState(state) {
+            //         return state.count + this.localCount
+            //     }
+            // }),
+            // computed: mapState([
+            //     // 映射 this.count 为 store.state.count
+            //     'count'
+            // ]),
+            computed: {
+                countPlusLocalState() {
+                    return this.localCount;
+                },
+                ...mapState([
+                    // 映射 this.count 为 store.state.count
+                    'count',
+                    "todos"
+                ]),
+                doneTodosCount() {
+                    return this.$store.getters.doneTodosCount
+                },
+                ...mapGetters(["doneTodos", "doneTodosCount"]),
+                ...mapGetters({ getID: "getTodoById" }),
+                ...mapState({ countA: state => state.moduleA.count }),
+                ...mapState(["moduleB"]),
+                // ...mapState("moduleA/moduleAA",["count"]),
+                ...mapState("moduleA/moduleAA", { ["countAA"]: state => state.count }),
+            },
+            components: {
+                comA: {
+                    template: `<span><strong>{{count}}</strong></span>`,
+                    computed: {
+                        count() {
+                            return this.$store.state.count;
+                        }
+                    }
+                }
+            }
+        })
+        console.log();
+    </script>
+</body>
+
+</html>
